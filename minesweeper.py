@@ -135,6 +135,9 @@ class MinesweeperModel:
         for n in neighbours:
             if n.state == 'closed':
                 self.openCell(n.row, n.column)
+            if n.mined:
+                self.gameOver = True
+                return
 
     def openClearNeighbours(self, row, column):
         count_mines = self.countMinesAroundCell(row,column)
@@ -322,12 +325,7 @@ class MinesweeperController:
     def onLeftClick(self, row, column):
         self.model.openCell(row, column)
         self.view.syncWithModel()
-        if self.model.isWin():
-            self.view.showWinMessage()
-            self.startNewGame()
-        elif self.model.isGameOver():
-            self.view.showGameOverMessage()
-            self.startNewGame()
+        self.checkStateGame()
 
     def onRightClick(self, row, column):
         self.model.nextCellMark(row, column)
@@ -335,8 +333,25 @@ class MinesweeperController:
         self.view.syncWithModel()
 
     def onMiddleClick(self, row, column):
+        """
+        Клик СКМ по открытой клетке открывает соседние ячейки, если число помеченных флагом
+        мин соответствует числу в ячейке.
+        """
         self.model.openClearNeighbours(row, column)
         self.view.syncWithModel()
+        self.checkStateGame()
+    
+    def checkStateGame(self):
+        """
+        Выполняет проверку состояния игры, и если игрок выиграл или проиграл
+        выводится соответствующее собщение, после чего начинается новая игра.
+        """
+        if self.model.isWin():
+            self.view.showWinMessage()
+            self.startNewgame()
+        elif self.model.isGameOver():
+            self.view.showGameOverMessage()
+            self.startNewGame()
 
 
 def main(argv=sys.argv):
