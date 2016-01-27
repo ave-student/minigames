@@ -135,7 +135,7 @@ class MinesweeperModel:
         for n in neighbours:
             if n.state == 'closed':
                 self.openCell(n.row, n.column)
-            if n.mined:
+            if n.mined and not n.state == 'flagged':
                 self.gameOver = True
                 return
 
