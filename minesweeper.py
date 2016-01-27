@@ -12,8 +12,8 @@ MAX_ROW_COUNT = 30
 MIN_COLUMN_COUNT = 5
 MAX_COLUMN_COUNT = 30
 
-MIN_MINE_COUNT = 1
-MAX_MINE_COUNT = 800
+#MIN_MINE_COUNT = 1
+#MAX_MINE_COUNT = 800
 
 class MinesweeperCell:
     # Состояния игровой клетки:
@@ -62,14 +62,6 @@ class MinesweeperModel:
         else:
             self.columnCount = MAX_COLUMN_COUNT
 
-        #if mineCount < self.rowCount * self.columnCount:
-            ## проверка не имеет смысла для случаев когда размет поля менее MAX_MINE_COUNT ячеек.
-            #if mineCount in range(MIN_MINE_COUNT, MAX_MINE_COUNT + 1):
-            #    self.mineCount = mineCount
-        #else:
-            # Максимальное количество мин ограничить 4/5 от величины поля.
-            #self.mineCount = self.rowCount * self.columnCount - 1
-   
         self.min_mine = round(self.rowCount * self.columnCount * 1 / 8)       
         self.max_mine = round(self.rowCount * self.columnCount * 6 / 8)
         
@@ -174,7 +166,6 @@ class MinesweeperView(Frame):
         self.mineCount.set(self.model.mineCount)
         Spinbox(
                 panel,
-                # Заменить на model.min_mine и model.max_mine соответственно
                 from_ = model.min_mine,
                 to = model.max_mine,
                 textvariable = self.mineCount,
@@ -220,7 +211,7 @@ class MinesweeperView(Frame):
                     elif cell.state == 'opened':
                         btn.config(relief = SUNKEN, text='')
                         if cell.counter > 0:
-                      f      btn.config(text = cell.counter)
+                            btn.config(text = cell.counter)
                         elif cell.mined:
                             btn.config(bg = 'red')
                     elif cell.state == 'flagged':
@@ -246,13 +237,7 @@ class MinesweeperView(Frame):
             self.board.pack_forget()
             self.board.destroy()
 
-            self.rowCount.set(self.model.rowCtroller)
-    view.pack()
-    view.mainloop()
-
-if __name__ == "__main__":
-    sys.exit(main())
-ount)
+            self.rowCount.set(self.model.rowCount)
             self.columnCount.set(self.model.columnCount)
             self.mineCount.set(self.model.mineCount)
         except:
@@ -323,4 +308,9 @@ class MinesweeperController:
 def main(argv=sys.argv):
     model = MinesweeperModel()
     controller = MinesweeperController(model)
-    view = MinesweeperView(model, conff
+    view = MinesweeperView(model, controller)
+    view.pack()
+    view.mainloop()
+
+if __name__ == "__main__":
+    sys.exit(main())
