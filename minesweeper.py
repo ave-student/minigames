@@ -115,10 +115,34 @@ class MinesweeperModel:
 
         cell.counter = self.countMinesAroundCell(row, column)
         if cell.counter == 0:
-            neighbours = self.getCellNeighbours(row, column)
-            for n in neighbours:
-                if n.state == 'closed':
-                    self.openCell(n.row, n.column)
+            self.openNeighbours(row, column)
+            #neighbours = self.getCellNeighbours(row, column)
+            #for n in neighbours:
+            #    if n.state == 'closed':
+            #        self.openCell(n.row, n.column)
+
+    ###############
+    def countFlaggedNeighbours(self, row, column):
+        neighbours = self.getCellNeighbours(row, column)
+        count = 0
+        for n in neighbours:
+            if n.state == 'flagged':
+                count +=1
+        return count
+
+    def openNeighbours(self, row, column):
+        neighbours = self.getCellNeighbours(row, column)
+        for n in neighbours:
+            if n.state == 'closed':
+                self.openCell(n.row, n.column)
+
+    def openClearNeighbours(self, row, column):
+        count_mines = self.countMinesAroundCell(row,column)
+        count_flags = self.countFlaggedNeighbours(row, column)
+
+        if count_mines == count_flags:
+            self.openNeighbours(row, column)
+    ##############
 
     def nextCellMark(self, row, column):
         cell = self.getCell(row, column)
@@ -207,15 +231,15 @@ class MinesweeperView(Frame):
                         btn.config(bg = 'black', text = 'x')
 
                     if cell.state == 'closed':
-                        btn.config(text = '')
+                        btn.config(bg = 'lightblue', text = '')
                     elif cell.state == 'opened':
-                        btn.config(relief = SUNKEN, text='')
+                        btn.config(relief = SUNKEN, bg='white', text='')
                         if cell.counter > 0:
                             btn.config(text = cell.counter)
                         elif cell.mined:
                             btn.config(bg = 'red')
                     elif cell.state == 'flagged':
-                        btn.config(text = 'P')
+                        btn.config(bg = 'orange', text = 'P')
                     elif cell.state == 'questioned':
                         btn.config(text = '?')
 
@@ -259,10 +283,15 @@ class MinesweeperView(Frame):
                         padx = 0,
                         pady = 0
                 )
+                btn.config(bg = 'lightblue')
                 btn.pack(side = LEFT)
                 btn.bind(
                         '<Button-3>',
                         lambda e, row = row, column = column: self.controller.onRightClick(row, column)
+                )
+                btn.bind(
+                        '<Button-2>',
+                        lambda e, row = row, column = column: self.controller.onMiddleClick(row, column)
                 )
                 self.buttonsRow.append(btn)
 
@@ -304,6 +333,11 @@ class MinesweeperController:
         self.model.nextCellMark(row, column)
         self.view.blockCell(row, column, self.model.getCell(row, column).state == 'flagged')
         self.view.syncWithModel()
+
+    def onMiddleClick(self, row, column):
+        self.model.openClearNeighbours(row, column)
+        self.view.syncWithModel()
+
 
 def main(argv=sys.argv):
     model = MinesweeperModel()
