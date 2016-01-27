@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
+"""
+Сапер (Minesweeper) - логическая игра.
+Приложение построено на базе паттерна MVC.
+"""
+
 import sys
 from tkinter import *
 import tkinter.messagebox
@@ -16,6 +21,10 @@ MAX_COLUMN_COUNT = 30
 #MAX_MINE_COUNT = 800
 
 class MinesweeperCell:
+    """
+    Класс ячейки минного поля.
+    Используется в модели MVC.
+    """
     # Состояния игровой клетки:
     #   closed - закрыта
     #   opened - открыта
@@ -31,21 +40,35 @@ class MinesweeperCell:
         self.markSequence = ['closed', 'flagged', 'questioned']
 
     def nextMark(self):
+        """
+        Метод циклически изменяет состояние игровой клетки.
+        """
         if self.state in self.markSequence:
             stateIndex = self.markSequence.index(self.state)
             self.state = self.markSequence[(stateIndex + 1) % len(self.markSequence)]
 
     def open(self):
+        """
+        Метод позволяет открыть ячейку, если она не помечена флажком
+        (состояние 'flagged').
+        """
         if self.state != 'flagged':
             self.state = 'opened'
 
 
 class MinesweeperModel:
+    """
+    Класс модели игры.
+    Определяет основную логику игры.
+    """
     def __init__(self):
         self.startGame()
 
     def startGame(self, rowCount = 15, columnCount = 15, mineCount = 28):
-
+        """
+        Игра начинается с этого метода, в котором определяются размеры поля,
+        количество мин, инициализируются ячейки.
+        """
         if rowCount in range(MIN_ROW_COUNT, MAX_ROW_COUNT + 1):
             self.rowCount = rowCount
         # Для случаев, когда число строк выходит за допустимые пределы.
@@ -53,7 +76,7 @@ class MinesweeperModel:
         elif rowCount < MIN_ROW_COUNT:
             self.rowCount = MIN_ROW_COUNT
         else:
-            self.rowCount = MAX_ROW_CONT
+            self.rowCount = MAX_ROW_COUNT
 
         if columnCount in range(MIN_COLUMN_COUNT, MAX_COLUMN_COUNT + 1):
             self.columnCount = columnCount
@@ -68,7 +91,7 @@ class MinesweeperModel:
         if mineCount in range(self.min_mine, self.max_mine):
             self.mineCount = mineCount
         elif mineCount < self.min_mine:
-            self.mineCount = min_mine
+            self.mineCount = self.min_mine
         else:
             self.mineCount = self.max_mine
         
@@ -83,22 +106,42 @@ class MinesweeperModel:
             self.cellsTable.append(cellsRow)
 
     def getCell(self, row, column):
+        """
+        Возвращает объект ячейки по адресу row : column.
+        """
         if row < 0 or column < 0 or row >= self.rowCount or column >= self.columnCount:
             return None
         return self.cellsTable[row][column]
 
     def isWin(self):
+        """
+        Метод возвращает True, если каждая ячейка соответствует одному из условий
+        Победы, а именно:
+            - Ячейка заминирована.
+            - Ячейка открыта.
+            - Ячейка помечена флагом.
+        """
         for row in range(self.rowCount):
             for column in range(self.columnCount):
                 cell = self.cellsTable[row][column]
-                if not cell.mined and (cell.state != 'opened' and cell.state != 'flagged'):
+                if not cell.mined and cell.state != 'opened' and cell.state != 'flagged':
                     return False
         return True
 
     def isGameOver(self):
+        """
+        Возращает значение self.gameOver, которое устанавливается в истину,
+        в случае поражения.
+        """
         return self.gameOver
 
     def openCell(self, row,column):
+        """
+        Метод открытия ячеек.
+        Во время первого хода происходит генерация заминированных полей.
+        Если открываемая ячейка заминирована - игра окончена.
+        Если вокруг ячейки нет мин, то выполняется открытие соседних ячеек.
+        """
         cell = self.getCell(row, column)
         if not cell:
             return
@@ -116,13 +159,11 @@ class MinesweeperModel:
         cell.counter = self.countMinesAroundCell(row, column)
         if cell.counter == 0:
             self.openNeighbours(row, column)
-            #neighbours = self.getCellNeighbours(row, column)
-            #for n in neighbours:
-            #    if n.state == 'closed':
-            #        self.openCell(n.row, n.column)
 
-    ###############
     def countFlaggedNeighbours(self, row, column):
+        """
+        Метод возращает количество соседних полей помеченных флажком.
+        """
         neighbours = self.getCellNeighbours(row, column)
         count = 0
         for n in neighbours:
@@ -131,6 +172,11 @@ class MinesweeperModel:
         return count
 
     def openNeighbours(self, row, column):
+        """
+        Метод окрытия соседних полей.
+        Поля вокруг ячейки с адресом (row;column) открываются, и если
+        среди них есть заминированное поле не помеченное флажком - игра окончена.
+        """
         neighbours = self.getCellNeighbours(row, column)
         for n in neighbours:
             if n.state == 'closed':
@@ -140,19 +186,30 @@ class MinesweeperModel:
                 return
 
     def openClearNeighbours(self, row, column):
+        """
+        Метод открывает ячейки вокруг поля (row;column), если
+        числомин вокруг данного поля равно числу полей помеченных флажком.
+        """
         count_mines = self.countMinesAroundCell(row,column)
         count_flags = self.countFlaggedNeighbours(row, column)
 
         if count_mines == count_flags:
             self.openNeighbours(row, column)
-    ##############
 
     def nextCellMark(self, row, column):
+        """
+        Циклически меняет метку поля.
+        """
         cell = self.getCell(row, column)
         if cell:
             cell.nextMark()
 
     def generateMines(self):
+        """
+        Метод генерации мин на поле.
+        Метод выполняется после первого хода. Открытая в первом
+        ходе ячейка не может быть заминирована.
+        """
         for i in range(self.mineCount):
             while True:
                 row = random.randint(0, self.rowCount - 1)
@@ -163,10 +220,16 @@ class MinesweeperModel:
                     break
 
     def countMinesAroundCell(self, row, column):
+        """
+        Метод подсчета заминированных ячеек вокруг данной.
+        """
         neighbours = self.getCellNeighbours(row, column)
         return sum(1 for n in neighbours if n.mined)
 
     def getCellNeighbours(self, row, column):
+        """
+        Возвращает список соседних ячеек.
+        """
         neighbours = []
         for r in range(row - 1, row + 2):
             neighbours.append(self.getCell(r, column - 1))
@@ -177,6 +240,10 @@ class MinesweeperModel:
         return filter(lambda n: n is not None, neighbours)
 
 class MinesweeperView(Frame):
+    """
+    Класс представления.
+    Определяет графический пользовательский интерфейс.
+    """
     def __init__(self, model, controller, parent = None):
         Frame.__init__(self, parent)
         self.model = model
@@ -224,14 +291,14 @@ class MinesweeperView(Frame):
         Label(panel, text = 'Board size: ').pack(side = RIGHT)
 
     def syncWithModel(self):
+        """
+        Метод синхронизации представления с модлью.
+        """
         for row in range(self.model.rowCount):
             for column in range(self.model.columnCount):
                 cell = self.model.getCell(row, column)
                 if cell:
                     btn = self.buttonsTable[row][column]
-
-                    if self.model.isGameOver() and cell.mined:
-                        btn.config(bg = 'black', text = 'x')
 
                     if cell.state == 'closed':
                         btn.config(bg = 'lightblue', text = '')
@@ -239,14 +306,21 @@ class MinesweeperView(Frame):
                         btn.config(relief = SUNKEN, bg='white', text='')
                         if cell.counter > 0:
                             btn.config(text = cell.counter)
-                        elif cell.mined:
-                            btn.config(bg = 'red')
                     elif cell.state == 'flagged':
                         btn.config(bg = 'orange', text = 'P')
                     elif cell.state == 'questioned':
                         btn.config(text = '?')
+                    
+                    if self.model.isGameOver() and cell.mined:
+                        if cell.state == 'opened':
+                            btn.config(bg = 'red', text = ':x')
+                        else:
+                            btn.config(bg = 'purple', text = 'x')
 
     def blockCell(self, row, column, block = True):
+        """
+        Метод блокирует заданную ячейку для ЛКМ.
+        """
         btn = self.buttonsTable[row][column]
         if not btn:
             return
@@ -257,9 +331,15 @@ class MinesweeperView(Frame):
             btn.unbind('<Button-1>')
 
     def getGameSettings(self):
+        """
+        Возвращает параметры игры.
+        """
         return self.rowCount.get(), self.columnCount.get(), self.mineCount.get()
 
     def createBoard(self):
+        """
+        Метод создает графическое представление игрового поля.
+        """
         try:
             self.board.pack_forget()
             self.board.destroy()
@@ -307,6 +387,10 @@ class MinesweeperView(Frame):
         tkinter.messagebox.showinfo('Game Over!', 'You lose! 8x')
 
 class MinesweeperController:
+    """
+    Класс контроллера.
+    Обеспечивает взаимодействи модели и представления.
+    """
     def __init__(self, model):
         self.model = model
 
@@ -323,11 +407,16 @@ class MinesweeperController:
         self.view.createBoard()
 
     def onLeftClick(self, row, column):
+        """
+        Обработчик нажатия левой кнопки мыши.
+        """
         self.model.openCell(row, column)
-        self.view.syncWithModel()
         self.checkStateGame()
 
     def onRightClick(self, row, column):
+        """
+        Обработчик нажатия правой кнопки мыши.
+        """
         self.model.nextCellMark(row, column)
         self.view.blockCell(row, column, self.model.getCell(row, column).state == 'flagged')
         self.view.syncWithModel()
@@ -338,7 +427,6 @@ class MinesweeperController:
         мин соответствует числу в ячейке.
         """
         self.model.openClearNeighbours(row, column)
-        self.view.syncWithModel()
         self.checkStateGame()
     
     def checkStateGame(self):
@@ -347,11 +435,15 @@ class MinesweeperController:
         выводится соответствующее собщение, после чего начинается новая игра.
         """
         if self.model.isWin():
+            self.view.syncWithModel()
             self.view.showWinMessage()
-            self.startNewgame()
+            self.startNewGame()
         elif self.model.isGameOver():
+            self.view.syncWithModel()
             self.view.showGameOverMessage()
             self.startNewGame()
+        else:
+            self.view.syncWithModel()
 
 
 def main(argv=sys.argv):
