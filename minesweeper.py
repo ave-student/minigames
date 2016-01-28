@@ -124,7 +124,11 @@ class MinesweeperModel:
         for row in range(self.rowCount):
             for column in range(self.columnCount):
                 cell = self.cellsTable[row][column]
-                if not cell.mined and cell.state != 'opened' and cell.state != 'flagged':
+                # if not cell.mined and cell.state != 'opened' and cell.state != 'flagged':
+                if not cell.mined and cell.state != 'opened':
+                    return False
+                elif cell.mined and cell.state == 'opened':
+                    self.gameOver = True
                     return False
         return True
 
@@ -309,13 +313,13 @@ class MinesweeperView(Frame):
                     elif cell.state == 'flagged':
                         btn.config(bg = 'orange', text = 'P')
                     elif cell.state == 'questioned':
-                        btn.config(text = '?')
+                        btn.config(bg = 'yellow', text = '?')
                     
                     if self.model.isGameOver() and cell.mined:
                         if cell.state == 'opened':
-                            btn.config(bg = 'red', text = ':x')
+                            btn.config(bg = 'red', fg = 'white', text = ':x')
                         else:
-                            btn.config(bg = 'purple', text = 'x')
+                            btn.config(bg = 'purple', fg = 'white', text = 'x')
 
     def blockCell(self, row, column, block = True):
         """
