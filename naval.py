@@ -256,17 +256,33 @@ class NavalModel:
                 success = True
         self.mark_ships(board)
 
-    def step(self, x, y, board):
+    def c_fire(self):
+        next_step = False
+        success = True
+        while success:
+            if next_step:
+                pass
+            else:
+                x = random.randint(0, self.__baord_size - 1)
+                y = random.randint(0, self.__board_size - 1)
+            try:
+                next_step = fire(x, y, self.h_board)
+                success = next_step
+            except Exception:
+                success = True
+
+    def fire(self, x, y, board):
         if not 0 <= x < self.__board_size or not 0 <= y < self.__board_size:
             raise Exception('Not in range.')
         cell = board.get_cell(x, y)
+        if cell.is_opened():
+            raise Exception('Cell is already opened!.')
         cell.open()
         ship = board.cell_in_ship(x, y)
         if ship:
-            if ship.is_bang():
-                cell.set_mark('bang')
+            cell.set_mark('bang')
             if ship.is_sunk():
-                cell.set_mark('sunk')
+                board.mark_cells(ship.get_cells(), 'sunk')
             return True
         return False
 
