@@ -257,14 +257,15 @@ class NavalModel:
         self.mark_ships(board)
 
     def c_fire(self):
-        next_step = False
+        """
+        Простейшая реализация компьютерной логики -
+        это ее отсутствие :)
+        Random решает судьбу игрока.
+        """
         success = True
         while success:
-            if next_step:
-                pass
-            else:
-                x = random.randint(0, self.__baord_size - 1)
-                y = random.randint(0, self.__board_size - 1)
+            x = random.randint(0, self.__baord_size - 1)
+            y = random.randint(0, self.__board_size - 1)
             try:
                 next_step = fire(x, y, self.h_board)
                 success = next_step
