@@ -6,6 +6,7 @@ Naval Clash - игра "морской бой".
 
 import sys
 import random
+from model import NavalModel
 
 class NavalGame:
     def __init__(self, model):

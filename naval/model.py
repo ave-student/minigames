@@ -66,7 +66,7 @@ class NavalModel:
             x = random.randint(0, self.__baord_size - 1)
             y = random.randint(0, self.__board_size - 1)
             try:
-                success = fire(x, y, self.h_board)
+                success = self.fire(x, y, self.h_board)
             except Exception:
                 success = True
 
